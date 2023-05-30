@@ -28,6 +28,22 @@
       "name": "lint",
       "command": "yarn lint",
       "runAtStart": false
+    },
+    "next dev": {
+      "name": "next dev",
+      "command": "next dev"
+    },
+    "npm run dev": {
+      "name": "npm run dev",
+      "command": "npm run dev"
+    },
+    "npm build": {
+      "name": "npm build",
+      "command": "npm build"
+    },
+    "npm run build": {
+      "name": "npm run build",
+      "command": "npm run build"
     }
   }
 }
