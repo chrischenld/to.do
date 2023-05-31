@@ -7,8 +7,9 @@ export default function Home() {
   const [showTextInput, setShowTextInput] = useState(false);
   const [todoList, setTodoList] = useState([]);
   const [completeList, setCompleteList] = useState([]);
+  const [deleteList, setDeleteList] = useState([]);
 
-  // handling hover and focus
+  // hover and focus for todoList
   const [hoveredItem, setHoveredItem] = useState(null);
   const [focusedItem, setFocusedItem] = useState(null);
 
@@ -30,6 +31,30 @@ export default function Home() {
   const handleBlur = () => {
     setFocusedItem(null);
     setHoveredItem(null);
+  };
+
+  // hover and focus for completeList
+  const [hoveredCompleteItem, setHoveredCompleteItem] = useState(null);
+  const [focusedCompleteItem, setFocusedCompleteItem] = useState(null);
+
+  const handleCompleteMouseEnter = (index) => {
+    setHoveredCompleteItem(index);
+  };
+
+  const handleCompleteMouseLeave = () => {
+    if (hoveredCompleteItem !== focusedCompleteItem) {
+      setHoveredCompleteItem(null);
+    }
+  };
+
+  const handleCompleteFocus = (index) => {
+    setFocusedCompleteItem(index);
+    setHoveredCompleteItem(index);
+  };
+
+  const handleCompleteBlur = () => {
+    setFocusedCompleteItem(null);
+    setHoveredCompleteItem(null);
   };
 
   // handling shortcut
@@ -57,11 +82,20 @@ export default function Home() {
     }
   };
 
+  const handleKeyDownDelete = (event, completeItem) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleDelete(completeItem);
+    }
+  };
+
   // Form submission
   const handleSubmit = (newItem) => {
     setTodoList((prevItems) => [...prevItems, newItem]);
     setShowTextInput(false);
-    console.log(todoList);
+
+    // Save todoList items to local storage
+    localStorage.setItem("todoList", JSON.stringify([...todoList, newItem]));
   };
 
   const handleSubmitComplete = (completedItem) => {
@@ -69,6 +103,26 @@ export default function Home() {
       prevTodoList.filter((todoItem) => todoItem !== completedItem)
     );
     setCompleteList((prevCompleteList) => [...prevCompleteList, completedItem]);
+
+    localStorage.setItem(
+      "todoList",
+      JSON.stringify(todoList.filter((todoItem) => todoItem !== completedItem))
+    );
+    localStorage.setItem(
+      "completeList",
+      JSON.stringify([...completeList, completedItem])
+    );
+  };
+
+  const handleDelete = (deletedItem) => {
+    setCompleteList((prevCompleteList) =>
+      prevCompleteList.filter((completedItem) => completedItem !== deletedItem)
+    );
+
+    localStorage.setItem(
+      "completeList",
+      JSON.stringify(completeList.filter((item) => item !== deletedItem))
+    );
   };
 
   // Showing text input upon button click
@@ -80,6 +134,21 @@ export default function Home() {
   const handleFormVisibility = () => {
     setShowTextInput(false);
   };
+
+  // retrieve todolist based on local storage
+  useEffect(() => {
+    // Retrieve todoList from local storage
+    const savedTodoList = JSON.parse(localStorage.getItem("todoList"));
+    if (savedTodoList) {
+      setTodoList(savedTodoList);
+    }
+
+    // Retrieve completeList from local storage
+    const savedCompleteList = JSON.parse(localStorage.getItem("completeList"));
+    if (savedCompleteList) {
+      setCompleteList(savedCompleteList);
+    }
+  }, []);
 
   return (
     <div className="bg-zinc-900 min-h-screen text-sm flex justify-center w-full selection:bg-zinc-100 selection:text-zinc-900">
@@ -120,9 +189,17 @@ export default function Home() {
           {completeList.map((completeItem, index) => (
             <li
               key={index}
-              className="flex justify-between items-center h-12 pl-4 pr-4 text-zinc-600 rounded-md line-through"
+              className="flex justify-between items-center h-12 pl-4 pr-4 text-zinc-600 rounded-md line-through hover:text-zinc-500 cursor-pointer focus:text-zinc-500 focus:outline-0"
+              onClick={() => handleDelete(completeItem)}
+              onMouseEnter={() => handleCompleteMouseEnter(index)}
+              onMouseLeave={handleCompleteMouseLeave}
+              onFocus={() => handleCompleteFocus(index)}
+              onBlur={handleCompleteBlur}
+              onKeyDown={(event) => handleKeyDownDelete(event, completeItem)} // Handle keydown event
+              tabIndex={0} // Make the <li> focusable
             >
               <p className="truncate max-w-full">{completeItem.text}</p>
+              {hoveredCompleteItem === index && <Icon name="Cross"></Icon>}
             </li>
           ))}
         </ul>
